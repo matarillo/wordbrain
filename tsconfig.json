@@ -1,17 +1,29 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "strict": true,
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
         "sourceMap": false,
         "target": "es5",
-        "outDir": "dist"
+        "module": "es2015",
+        "moduleResolution": "node",
+        "lib": [
+            "dom",
+            "es2015",
+            "es2015.promise"
+        ],
+        "types": [
+            "vue-typescript-import-dts"
+        ],
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true
     },
     "exclude": [
         "node_modules"
     ],
     "files": [
-        "app.ts", "word.ts"
+        "app.ts",
+        "word.ts"
     ]
 }
