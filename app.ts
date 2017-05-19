@@ -1,95 +1,97 @@
 import Vue from 'vue';
 import { allWordList } from './word';
 
-const SIZE: number = 4;
+type VueData = {
+    cellSize: string;
+    cellData: string;
+    cells: string[][];
+    wordsLength: string;
+    words: string[];
+}
 
 class App {
-    private _cells: string;
+    private _cellSize: number;
+    private _cellData: string;
     private _wordList: string[] = allWordList;
     private _wordsLength: number;
-    vueModel = {
-        el: "#container",
-        data: {
-            cells: "",
-            c00: "",
-            c10: "",
-            c20: "",
-            c30: "",
-            c01: "",
-            c11: "",
-            c21: "",
-            c31: "",
-            c02: "",
-            c12: "",
-            c22: "",
-            c32: "",
-            c03: "",
-            c13: "",
-            c23: "",
-            c33: "",
-            wordsLength: "0",
-            words: [] as string[]
-        },
-        methods: {
-            updateCells: () => {
-                this.updateCells(this.vueModel.data.cells);
-                this.updateVueModelCells();
-            },
-            findWords: () => {
-                this.findWords(this.vueModel.data.wordsLength);
+    constructor() {
+        this._cellSize = 4;
+        this._cellData = "ABCD,EFGH,IJKL,MNOP";
+        this._wordsLength = 0;
+    }
+    getData(): VueData {
+        return {
+            cellSize: this._cellSize.toString(),
+            cellData: this._cellData,
+            cells: this.getCells(),
+            wordsLength: this._wordsLength.toString(),
+            words: [],
+        };
+    }
+    updateSize(data: VueData) {
+        var size: number = parseInt(data.cellSize);
+        if (isNaN(size) || size <= 0) {
+            data.cellSize = this._cellSize.toString();
+            return;
+        }
+        this.setCellSize(size);
+        data.cellData = this._cellData;
+        data.cells = this.getCells();
+    }
+    updateCells(data: VueData) {
+        let arr: string[] = data.cellData.split(",");
+        if (arr.length !== this._cellSize || arr.some(x => x.length !== this._cellSize)) {
+            data.cellData = this._cellData;
+            return;
+        }
+        this._cellData = data.cellData;
+        data.cells = this.getCells();
+    }
+    updateWords(data: VueData) {
+        data.words = this.findWords(data.wordsLength);
+    }
+    private setCellSize(size: number) {
+        this._cellSize = size;
+        let l = size * size;
+        let arr: string[] = new Array(size);
+        let counter: number = 0;
+        for (let y = 0; y < size; y++) {
+            arr[y] = "";
+            for (let x = 0; x < size; x++) {
+                arr [y] += String.fromCharCode(65 + counter);
+                counter++;
+                if (counter === 26) {
+                    counter = 0;
+                }
             }
         }
-    };
-    constructor() {
-        this._cells = "ABCD,EFGH,IJKL,MNOP";
-        this._wordsLength = 0;
-        this.updateVueModelCells();
+        this._cellData = arr.join(",");
     }
-    private updateCells(value: string) {
-        let arr: string[] = value.split(",");
-        if (arr.length == SIZE && arr.every(x => x.length === SIZE)) {
-            this._cells = value;
-        }
+    private getCells(): string[][] {
+        return this._cellData.split(",").map(x => x.split(""));
     }
-    private updateVueModelCells() {
-        let arr: string[] = this._cells.split(",");
-        this.vueModel.data.cells = this._cells;
-        this.vueModel.data.c00 = arr[0].charAt(0);
-        this.vueModel.data.c10 = arr[0].charAt(1);
-        this.vueModel.data.c20 = arr[0].charAt(2);
-        this.vueModel.data.c30 = arr[0].charAt(3);
-        this.vueModel.data.c01 = arr[1].charAt(0);
-        this.vueModel.data.c11 = arr[1].charAt(1);
-        this.vueModel.data.c21 = arr[1].charAt(2);
-        this.vueModel.data.c31 = arr[1].charAt(3);
-        this.vueModel.data.c02 = arr[2].charAt(0);
-        this.vueModel.data.c12 = arr[2].charAt(1);
-        this.vueModel.data.c22 = arr[2].charAt(2);
-        this.vueModel.data.c32 = arr[2].charAt(3);
-        this.vueModel.data.c03 = arr[3].charAt(0);
-        this.vueModel.data.c13 = arr[3].charAt(1);
-        this.vueModel.data.c23 = arr[3].charAt(2);
-        this.vueModel.data.c33 = arr[3].charAt(3);
-    }
-    private findWords(length: string) {
+    private findWords(length: string): string[] {
         let num: number = parseInt(length);
         if (isNaN(num)) {
-            return;
+            return [];
         }
         this._wordsLength = num;
         if (num <= 0) {
-            return;
+            return [];
         }
-        let cells: string[] = this._cells.split(",");
-        let m: boolean[][] = [[false, false, false, false], [false, false, false, false], [false, false, false, false], [false, false, false, false]];
-        let words: string[][] = new Array(16);
-        for (let y = 0; y < 4; y++) {
-            for (let x = 0; x < 4; x++) {
-                let i = y * 4 + x;
+        let cells: string[] = this._cellData.split(",");
+        let m: boolean[][] = new Array(this._cellSize);
+        for (let i = 0; i < m.length; i++) {
+            m[i] = new Array(this._cellSize).fill(false);
+        }
+        let words: string[][] = new Array(this._cellSize * this._cellSize);
+        for (let y = 0; y < this._cellSize; y++) {
+            for (let x = 0; x < this._cellSize; x++) {
+                let i = y * this._cellSize + x;
                 words[i] = this.searchRecc(cells, m, [], num, x, y);
             }
         }
-        this.vueModel.data.words = words.reduce((prev, curr) => prev.concat(curr));
+        return words.reduce((prev, curr) => prev.concat(curr));
     }
     private someStartWith(prefix: string): boolean {
         let lowerPrefix = prefix.toLowerCase();
@@ -135,14 +137,25 @@ class App {
         v.pop();
         return r;
     }
-
     private inside(x: number, y: number): boolean {
-        return (0 <= x && x < SIZE && 0 <= y && y < SIZE);
+        return (0 <= x && x < this._cellSize && 0 <= y && y < this._cellSize);
     }
 }
 
-
 document.addEventListener("DOMContentLoaded", function () {
-    // document.getElementById('el').innerHTML = words[0];
-    new Vue(new App().vueModel);
+    let app: App = new App();
+    let options: {
+        el: string;
+        data: VueData;
+        methods?: { [key: string]: (this: Vue, ...args: any[]) => any };
+    } = {
+        el: "#container",
+        data: app.getData(),
+        methods: {
+            updateSize: () => app.updateSize(options.data),
+            updateCells: () => app.updateCells(options.data),
+            findWords: () => app.updateWords(options.data),
+        },
+    };
+    new Vue(options);
 });
