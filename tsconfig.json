@@ -18,12 +18,5 @@
         ],
         "allowSyntheticDefaultImports": true,
         "experimentalDecorators": true
-    },
-    "exclude": [
-        "node_modules"
-    ],
-    "files": [
-        "app.ts",
-        "word.ts"
-    ]
+    }
 }
